@@ -56,6 +56,6 @@ def get_pod_events(event: PodEvent):
 
 @action
 def my_demo_action(event: ExecutionBaseEvent):
-    msg = "demo action v1"
+    msg = "demo action v0"
     logging.info(msg)
     event.add_enrichment([MarkdownBlock(msg)])
