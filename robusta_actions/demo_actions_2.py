@@ -50,5 +50,12 @@ def get_pod_events(event: PodEvent):
                 column_renderers={"time": RendererType.DATETIME},
             )
         )
-    event.add_enrichment(block_list)
+        event.add_enrichment(block_list)
+    else:
+        event.add_enrichment([MarkdownBlock(f"No events found for pod {pod.metadata.name} namespace {pod.metadata.namespace}")])
 
+@action
+def my_demo_action(event: ExecutionBaseEvent):
+    msg = "demo action v1"
+    logging.info(msg)
+    event.add_enrichment([MarkdownBlock(msg)])
