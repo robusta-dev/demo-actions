@@ -1,30 +1,42 @@
+from kubernetes import client
+from kubernetes.client import V1PodList
+
 from robusta.api import *
 
 
 class PodStatusParams(ActionParams):
     """
     :var status: query pods by this status
+    :var name: name prefix to filter by
     """
-    status: str
+    status: str = None
+    name: str = ""
 
 
 @action
 def list_pods_by_status(event: ExecutionBaseEvent, params: PodStatusParams):
-    pods: PodList = Pod.listPodForAllNamespaces(field_selector=f"status.phase={params.status}").obj
+    logging.info("list_pods_by_status start")
+    field_selector = None
+    if params.status:
+        field_selector = f"status.phase={params.status}"
+
+    pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces(field_selector=field_selector)
+    filtered_pods = [pod for pod in pods.items if pod.metadata.name.startswith(params.name)]
     event.add_finding(Finding(
         title=f"Pod list for status {params.status}",
         aggregation_key="Pod status report",
     ))
-    if pods.items:
+    if filtered_pods:
         event.add_enrichment([
             TableBlock(
                 table_name="pods list",
-                headers=["name", "namespace"],
-                rows=[[pod.metadata.name, pod.metadata.namespace] for pod in pods.items]
+                headers=["name", "namespace", "status"],
+                rows=[[pod.metadata.name, pod.metadata.namespace, pod.status.phase] for pod in filtered_pods]
             )
         ])
     else:
         event.add_enrichment([MarkdownBlock(f"No pods with status {params.status}")])
+    logging.info("list_pods_by_status done")
 
 
 @action
