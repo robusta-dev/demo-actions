@@ -21,7 +21,7 @@ def list_pods_by_status(event: ExecutionBaseEvent, params: PodStatusParams):
         field_selector = f"status.phase={params.status}"
 
     pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces(field_selector=field_selector)
-    filtered_pods = [pod for pod in pods.items if pod.metadata.name.startswith(params.name)]
+    filtered_pods = [pod for pod in pods.items if params.name in pod.metadata.name]
     event.add_finding(Finding(
         title=f"Pod list for status {params.status}",
         aggregation_key="Pod status report",
