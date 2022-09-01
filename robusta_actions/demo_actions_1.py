@@ -1,5 +1,6 @@
 from robusta.api import *
 from kubernetes import client
+from kubernetes.client import V1DeploymentList, V1DaemonSetList, V1PodList, V1StatefulSetList, V1ReplicaSetList
 
 
 class KindYamlParams(ActionParams):
@@ -66,3 +67,39 @@ def templated_customise_finding(event: ExecutionBaseEvent, params: FindingTempla
     description: str = Template(params.description).safe_substitute(labels) if params.description else None
 
     event.override_finding_attributes(title, description, severity)
+
+
+@action
+def print_cluster_resources(event: ExecutionBaseEvent):
+    logging.info("Printing visible cluster resources")
+    try:
+        deployments: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces()
+        logging.info("Deployments:")
+        for deployment in deployments.items:
+            logging.info(f"Deployment: name: {deployment.metadata.name} namespace: {deployment.metadata.namespace}")
+
+        statefulsets: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces()
+        logging.info("Statefulsets:")
+        for stat in statefulsets.items:
+            logging.info(f"StatefulSet: name: {stat.metadata.name} namespace: {stat.metadata.namespace}")
+
+        daemonsets: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces()
+        logging.info("DaemonSets:")
+        for ds in daemonsets.items:
+            logging.info(f"DaemonSet: name: {ds.metadata.name} namespace: {ds.metadata.namespace}")
+
+        replicasets: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces()
+        logging.info("ReplicaSets:")
+        for rs in replicasets.items:
+            logging.info(f"ReplicaSet: name: {rs.metadata.name} namespace: {rs.metadata.namespace}")
+
+        pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces()
+        logging.info("Pods:")
+        for pod in pods.items:
+            logging.info(f"Pod: name: {pod.metadata.name} namespace: {pod.metadata.namespace}")
+
+    except Exception:
+        logging.error(
+            f"Failed to visible cluster resources",
+            exc_info=True,
+        )
