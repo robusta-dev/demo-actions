@@ -148,4 +148,5 @@ def create_finding_demo(event: ExecutionBaseEvent, params: FindingFields):
         aggregation_key=params.aggregation_key,
         severity=FindingSeverity.from_severity(params.severity),
         source=event.get_source(),
+        subject=event.get_subject(),
     ))
