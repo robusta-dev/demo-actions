@@ -5,7 +5,7 @@ from kubernetes.client import V1DeploymentList, V1DaemonSetList, V1PodList, V1St
 
 @action
 def echo_test(event: ExecutionBaseEvent):
-    print("echo test v3")
+    print("echo test v4")
     
 
 class KindYamlParams(ActionParams):
