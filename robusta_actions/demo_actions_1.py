@@ -3,6 +3,11 @@ from kubernetes import client
 from kubernetes.client import V1DeploymentList, V1DaemonSetList, V1PodList, V1StatefulSetList, V1ReplicaSetList
 
 
+@action
+def echo_test(event: ExecutionBaseEvent):
+    print("echo test v1")
+    
+
 class KindYamlParams(ActionParams):
     """
     :var kind: k8s requested kind. One of: deployments/replicasets/daemonsets/statefulsets
