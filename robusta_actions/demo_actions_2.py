@@ -1,6 +1,5 @@
 from kubernetes import client
 from kubernetes.client import V1PodList
-
 from robusta.api import *
 
 
@@ -71,3 +70,53 @@ def my_demo_action(event: ExecutionBaseEvent):
     msg = "demo action v4"
     logging.info(msg)
     event.add_enrichment([MarkdownBlock(msg)])
+
+
+class StatusSilenceParams(ActionParams):
+    """
+    :var include: If available, will stop processing unless the pod status is in the include list
+    :var exclude: If available, will stop processing if the pod status is in the exclude list
+
+    :example include: ["Pending"]
+    :example exclude: ["Evicted"]
+    """
+
+    include: Optional[List[str]]
+    exclude: Optional[List[str]]
+
+
+@action
+def pod_status_silence(event: PodEvent, params: StatusSilenceParams):
+    """
+    Stop execution based on pod statuses.
+    """
+    pod = event.get_pod()
+    if not pod:
+        logging.info("Cannot run pod_status_silence with no pod. skipping")
+        return
+
+    if params.include:  # Stop unless pod status in include list
+        if pod.status.phase not in params.include:
+            event.stop_processing = True
+            return
+
+    if params.exclude:
+        if pod.status.phase in params.exclude:
+            event.stop_processing = True
+
+
+@action
+def job_deletion(event: JobEvent):
+    """
+    Delete the job from the cluster
+    """
+    job = event.get_job()
+    if not job:
+        logging.info("Cannot run job_deletion with no job. skipping")
+        return
+
+    # After deletion the metadata is empty. Saving the name and namespace
+    name = job.metadata.name
+    namespace = job.metadata.namespace
+    job.delete()
+    event.add_enrichment([MarkdownBlock(f"Job *{namespace}/{name}* deleted")])
