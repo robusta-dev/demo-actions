@@ -1,6 +1,9 @@
+from string import Template
+
 from robusta.api import *
 from kubernetes import client
 from kubernetes.client import V1DeploymentList, V1DaemonSetList, V1PodList, V1StatefulSetList, V1ReplicaSetList
+from typing import Optional
 
 
 @action
