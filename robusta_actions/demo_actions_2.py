@@ -1,5 +1,7 @@
 from kubernetes import client
 from kubernetes.client import V1PodList
+from typing import List, Optional
+
 from robusta.api import *
 
 
