@@ -122,3 +122,15 @@ def job_deletion(event: JobEvent):
     namespace = job.metadata.namespace
     job.delete()
     event.add_enrichment([MarkdownBlock(f"Job *{namespace}/{name}* deleted")])
+
+@action
+def pod_evicted_notification(event: PodChangeEvent):
+    if event.operation == K8sOperationType.UPDATE:  # check only for existing pods, not updates or deletes
+        old_phase = event.old_obj.status.phase
+        new_phase = event.obj.status.phase
+
+        if old_phase != 'Evicted' and new_phase == 'Evicted':
+            event.add_finding(Finding(
+                title=f"Pod {event.obj.metadata.name}/{event.obj.metadata.namespace} evicted",
+                aggregation_key="PodEvicted",
+            ))
